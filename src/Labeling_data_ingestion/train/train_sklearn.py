@@ -3,6 +3,8 @@ from  Labeling_data_ingestion.data_handler.import_data import load_data
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from  sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 df = load_data(DATA_PATH)
 df = df[["title", "theme", "relevant"]]
@@ -10,14 +12,23 @@ df = df[["title", "theme", "relevant"]]
 def train(model):
     X = df["title"] + " " + df["theme"]
     y = df["relevant"]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=40, test_size=0.15)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=40, test_size=0.20)
     
     vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1,2),sublinear_tf=True)
-    X_train = vectorizer.fit_transform(X_train)
-    X_test = vectorizer.transform(X_test)
+    X_train_vect = vectorizer.fit_transform(X_train)
+    X_test_vect = vectorizer.transform(X_test)
 
-    model.fit(X_train, y_train)
-    y_pred  = model.predict(X_test)
+    model.fit(X_train_vect, y_train)
+
+    y_proba = model.predict_proba(X_test_vect)[:, 1]
+
+    threshold = 0.4
+    y_pred = (y_proba >= threshold).astype(int)
+
     accuracy = accuracy_score(y_test, y_pred)
+    print(confusion_matrix(y_test, y_pred))
+    print("\n")
+    print(classification_report(y_test, y_pred))
+    
     
     return model, vectorizer, accuracy
