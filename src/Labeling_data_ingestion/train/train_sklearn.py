@@ -22,13 +22,12 @@ def train(model):
 
     y_proba = model.predict_proba(X_test_vect)[:, 1]
 
-    threshold = 0.4
+    threshold = 0.3 #i found it being well balanced, and fit for my goal of having high recall/loose sieve at this stage of the pipeline for now
     y_pred = (y_proba >= threshold).astype(int)
 
     accuracy = accuracy_score(y_test, y_pred)
     print(confusion_matrix(y_test, y_pred))
     print("\n")
     print(classification_report(y_test, y_pred))
-    
     
     return model, vectorizer, accuracy
