@@ -10,15 +10,9 @@ df = load_data(DATA_PATH)
 df = df[["title", "theme", "relevant"]]
 
 def train(model, threshold = 0.348):
-    #optimal thresholds for each model for the loose sieve purpose after some testing (prioritise recall and precision for 1)
-    #logisitc for 1: prec 0,56 rec 0,82 at 0,348 <- most reliable so far
-    #MultiNomialNB_model: 1: prec 0,56 rec 0,79  at  0,29 
-    #ComplementNB_model: 1: prec 0.52 rec 0.74 at 0.45
-    #SGDClassifier: 1: prec 0,53 rec 0,82 at 0.34
-    #SGDClassifier_HINGE: 1: prec 0,65 rec 0,80 at 0.15
     
 
-    X = df["title"] + " " + df["theme"]
+    X = df["title"] + " " + df["theme"] 
     y = df["relevant"]
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=40, test_size=0.20)
     
