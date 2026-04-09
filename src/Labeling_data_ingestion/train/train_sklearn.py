@@ -7,17 +7,20 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import joblib
 from sklearn.pipeline import Pipeline
+from Labeling_data_ingestion.models.sklearn_models.threshold_classifier import ThresholdClassifier
 
-df = load_data(DATA_PATH)
-df = df[["title", "theme", "relevant"]]
 
 def train(model, threshold = 0.3):
     
+    df = load_data(DATA_PATH)
+    df = df[["title", "theme", "relevant"]].dropna()
 
     X = df["title"] + " " + df["theme"] 
     y = df["relevant"]
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=40, test_size=0.20)
     
+    wrapped = ThresholdClassifier(model, threshold=threshold)
 
     pipe = Pipeline([(
         "vectorizer", 
@@ -26,18 +29,15 @@ def train(model, threshold = 0.3):
             ngram_range=(1,2),
             sublinear_tf=True
             )),
-            ("model", model)
+            ("model", wrapped)
     ])
 
 
     pipe.fit(X_train, y_train)
 
-    if hasattr(pipe, "predict_proba"):
-        scores = pipe.predict_proba(X_test)[:, 1]
-    else:
-        scores = pipe.decision_function(X_test)
 
-    y_pred = (scores >= threshold).astype(int)
+
+    y_pred = pipe.predict(X_test)
 
     accuracy = accuracy_score(y_test, y_pred)
 
@@ -47,4 +47,4 @@ def train(model, threshold = 0.3):
 
     joblib.dump(pipe, "trained_models/pipeline.rfk")
 
-    return pipe, accuracy, scores 
+    return pipe, accuracy
