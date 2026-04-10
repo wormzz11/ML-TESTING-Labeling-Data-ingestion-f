@@ -20,8 +20,8 @@ df.loc[certain_irrelevant, "relevant"] = 1.0
 df.loc[certain_irrelevant, "relevant"] = 0.0
 df.loc[manual_review, "relevant"] = None
 
-df.loc[certain_irrelevant | certain_relevant].to_csv("data/auto_labeled", index=False)
-df.loc[manual_review].to_csv("data/manual_review", index=False)
+df.loc[certain_irrelevant | certain_relevant].to_csv("data/certain_auto/auto_labeled.csv", index=False)
+df.loc[manual_review].to_csv("data/manual_review/manual_review.csv", index=False)
 
 
 
