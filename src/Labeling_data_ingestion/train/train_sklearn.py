@@ -14,10 +14,10 @@ def train(model, threshold = 0.3):
     
     df = load_data(DATA_PATH)
     df = df[["title", "theme", "relevant"]].dropna()
+    
 
     X = df["title"] + " " + df["theme"] 
     y = df["relevant"]
-
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=40, test_size=0.20)
     
     wrapped = ThresholdClassifier(model, threshold=threshold)
