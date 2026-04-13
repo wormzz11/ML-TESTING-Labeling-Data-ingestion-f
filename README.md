@@ -8,4 +8,4 @@ pytorch -> ?,?
 
 ### TODO:
 
-First introduction of transformer to see a ll-MiniLM-L6-v2 probably but might pick something else from hugging face depending on the results
+First introduction of transformer to compare tf-idf against  all-MiniLM-L6-v2 probably but might pick something else from hugging face depending on the results
