@@ -1,2 +1,1 @@
-DATA_PATH = "data/certain_auto/combined_truth.csv"
-
+DATA_PATH = "data/ground_truth_fallback/combined_truth.csv"

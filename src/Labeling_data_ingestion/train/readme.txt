@@ -1,3 +1,3 @@
 #train_TFIDF  -> finished
-# transformer.py -> to be created
-#train_pytorch -> to be  created
+#train_transformer -> in progress
+#pytorch_model.py -> to be  created possibly
