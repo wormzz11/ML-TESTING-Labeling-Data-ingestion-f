@@ -23,10 +23,11 @@ def run_prediction(input_path, model_path):
     df.loc[certain_relevant, "relevant"] = 1.0
     df.loc[certain_irrelevant, "relevant"] = 0.0
     df.loc[manual_review, "relevant"] = None
+    df['score_t1'] = scores
 
 
-    append_csv(df.loc[certain_irrelevant | certain_relevant], "data/certain_auto/auto_labeled_pipeline_test.csv")
-    append_csv(df.loc[manual_review], "data/manual_review/manual_review_test.csv")
+    append_csv(df.loc[certain_irrelevant | certain_relevant], "data/certain_auto/auto_labeled_pipeline_test2.csv")
+    append_csv(df.loc[manual_review], "data/manual_review/manual_review_test2.csv")
 
     manual_df = df.loc[manual_review].copy()
     manual_df["score"] = scores[manual_review]

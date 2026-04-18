@@ -1,13 +1,15 @@
 # Labeling-Data-ingestion
 
+1.First sieve/filter
 sklearn with tf idf-> finished, Logistic regression (first sieve) 
 transformer with logistic regression -> implemented
-pytorch -> ?,?
+
+2.Second filter
+
+ms-marco
 
 
 
 ### TODO:
 
-1.Introduce visual evaluation using matplotlib 
-2. implement possible theme estimation for fully automating the data labeling process (hbscan?)
-
+Introduce a finer sieve, as a second stage filtering before enrichment ms-marco
