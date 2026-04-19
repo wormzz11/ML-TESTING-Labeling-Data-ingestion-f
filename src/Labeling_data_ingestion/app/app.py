@@ -85,7 +85,6 @@ with st.sidebar:
     st.subheader("Paths")
     data_path       = st.text_input("Training CSV",         value=_DEFAULT_DATA_PATH)
     predict_in_path = st.text_input("Prediction input CSV", value="data/predict_data/unlabeled.csv")
-    filter_path     = st.text_input("MS MARCO input CSV",   value=_DEFAULT_FILTER_PATH)
     model_dir       = st.text_input("Trained models dir",   value="trained_models/")
 
     st.divider()
@@ -108,18 +107,16 @@ with st.sidebar:
 
 tabs = st.tabs([
     "📥 1 · Data Ingestion",
-    "✂️ 2 · Train/Test Split",
-    "🏋️ 3 · Training",
-    "📊 4 · Evaluation",
-    "🔮 5 · Prediction",
-    "🏆 6 · MS MARCO",
+    "🏋️ 2 · Training",
+    "📊 3 · Evaluation",
+    "🔮 4 · Prediction",
+    "🏆 5 · MS MARCO",
     "📋 Logs",
 ])
 
 
 with tabs[0]:
     st.header("Data Ingestion & Preprocessing")
-    st.caption("`load_data()` → `build_dataset()` — columns kept: title, theme, relevant")
 
     if st.button("📂 Load & Build Dataset", type="primary", key="btn_load"):
         if not IMPORTS_OK:
@@ -139,7 +136,7 @@ with tabs[0]:
     if st.session_state.raw_df is not None:
         raw = st.session_state.raw_df
         st.subheader("Raw CSV")
-        _metric_row({"Rows": len(raw), "Columns": len(raw.columns), "Total nulls": int(raw.isnull().sum().sum())})
+        _metric_row({"Rows": len(raw), "Columns": len(raw.columns)})
         with st.expander("🔍 Inspect raw data", expanded=True):
             _df_inspector(raw, "raw")
 
@@ -173,14 +170,15 @@ with tabs[0]:
 
 
 with tabs[1]:
-    st.header("Train / Test Split")
-    st.caption("`train_test(df, test_size, seed)` — feature: title + theme")
+    st.header("Model Training")
 
     if st.session_state.dataset_df is None:
         st.info("Complete **Tab 1** first.")
     else:
-        if st.button("✂️ Split", type="primary", key="btn_split"):
-            with st.spinner("Splitting…"):
+        save_path = f"{model_dir.rstrip('/')}/{model_name}.rfk"
+
+        if st.button(f"🏋️ Train {model_name}", type="primary", key="btn_train"):
+            with st.spinner(f"Splitting and training {model_name}…"):
                 try:
                     X_tr, X_te, y_tr, y_te = train_test(
                         st.session_state.dataset_df, float(test_size), int(seed)
@@ -190,45 +188,17 @@ with tabs[1]:
                     st.session_state.y_train = y_tr
                     st.session_state.y_test  = y_te
                     _log(f"Split: {len(X_tr)} train / {len(X_te)} test")
-                    st.success(f"**{len(X_tr)}** train | **{len(X_te)}** test")
-                except Exception as exc:
-                    st.error(str(exc)); _log(f"ERROR split: {exc}")
 
-        if st.session_state.X_train is not None:
-            _metric_row({
-                "Train rows": len(st.session_state.X_train),
-                "Test rows":  len(st.session_state.X_test),
-                "Train pos":  int(st.session_state.y_train.sum()),
-                "Test pos":   int(st.session_state.y_test.sum()),
-            })
-            c1, c2 = st.columns(2)
-            with c1:
-                st.subheader("Training set")
-                _df_inspector(pd.DataFrame({"text": st.session_state.X_train, "relevant": st.session_state.y_train}), "tr")
-            with c2:
-                st.subheader("Test set")
-                _df_inspector(pd.DataFrame({"text": st.session_state.X_test, "relevant": st.session_state.y_test}), "te")
-
-
-with tabs[2]:
-    st.header("Model Training")
-
-    if st.session_state.X_train is None:
-        st.info("Complete **Tab 2** first.")
-    else:
-        save_path = f"{model_dir.rstrip('/')}/{model_name}.rfk"
-        st.markdown(f"Model: **`{model_name}`** &nbsp;|&nbsp; Threshold: **`{train_threshold}`** &nbsp;|&nbsp; Train rows: **`{len(st.session_state.X_train)}`**")
-
-        if st.button(f"🏋️ Train {model_name}", type="primary", key="btn_train"):
-            with st.spinner(f"Training {model_name}…"):
-                try:
                     base = logistic_model()
                     fn   = {"tfidf": train_tfidf, "transformer": train_transformer}[model_name]
-                    pipe = fn(base, st.session_state.X_train, st.session_state.y_train, threshold=train_threshold)
+                    pipe = fn(base, X_tr, y_tr, threshold=train_threshold)
                     save_model(pipe, save_path)
                     st.session_state.pipe = pipe
                     _log(f"Trained {model_name}, saved → {save_path}")
-                    st.success(f"✅ Saved to `{save_path}`")
+                    st.success(
+                        f"Split: **{len(X_tr)}** train / **{len(X_te)}** test &nbsp;|&nbsp; "
+                        f"Model saved to `{save_path}`"
+                    )
                 except Exception as exc:
                     st.error(str(exc)); _log(f"ERROR train: {exc}")
 
@@ -251,13 +221,13 @@ with tabs[2]:
                     st.markdown(f"- **{name}** → `{type(step).__name__}`")
 
 
-with tabs[3]:
+with tabs[2]:
     st.header("Model Evaluation")
 
     if st.session_state.pipe is None:
-        st.info("Train or load a model in **Tab 3** first.")
+        st.info("Train or load a model in **Tab 2** first.")
     elif st.session_state.X_test is None:
-        st.info("Split data in **Tab 2** first.")
+        st.info("Run training first so the test split is available.")
     else:
         eval_thresh = st.slider("Eval threshold", 0.01, 0.99, float(train_threshold), 0.01)
 
@@ -297,9 +267,8 @@ with tabs[3]:
                 st.code(r["report"], language=None)
 
 
-with tabs[4]:
+with tabs[3]:
     st.header("Prediction / Inference")
-    st.caption("`run_prediction()` — splits output into certain +/− and manual review")
 
     pred_model_path = st.text_input("Model path", value=f"{model_dir.rstrip('/')}/{model_name}.rfk", key="pred_model_path")
     c1, c2 = st.columns(2)
@@ -370,9 +339,8 @@ with tabs[4]:
             st.info("No rows in this subset.")
 
 
-with tabs[5]:
+with tabs[4]:
     st.header("MS MARCO Cross-Encoder Re-Ranking")
-    st.caption("`cross-encoder/ms-marco-MiniLM-L6-v2` — re-ranks certain positives for further filtering")
 
     c1, c2 = st.columns(2)
     marco_in   = c1.text_input("Certain positives CSV", value="data/certain_auto/auto_labeled.csv", key="marco_in")
@@ -426,7 +394,6 @@ with tabs[5]:
 
         st.divider()
         st.subheader("Filter & Export")
-        st.caption("Everything above the threshold gets saved for the next pipeline stage / enrichment")
 
         rank_thresh = st.number_input(
             "Keep rows with ranking ≥",
@@ -463,18 +430,8 @@ with tabs[5]:
         st.divider()
         _df_inspector(filtered, "ranked")
 
-        st.divider()
-        st.subheader("Side-by-side comparison")
-        idx_options = filtered.index.tolist()
-        if len(idx_options) >= 2:
-            ca, cb = st.columns(2)
-            ia = ca.selectbox("Row A", idx_options, key="cmp_a")
-            ib = cb.selectbox("Row B", idx_options, index=1, key="cmp_b")
-            ca.json({c: str(df_r.loc[ia, c]) for c in df_r.columns})
-            cb.json({c: str(df_r.loc[ib, c]) for c in df_r.columns})
 
-
-with tabs[6]:
+with tabs[5]:
     st.header("Run Logs")
     if st.button("🗑️ Clear", key="btn_clear_logs"):
         st.session_state.logs = []
@@ -482,4 +439,3 @@ with tabs[6]:
         st.code("\n".join(reversed(st.session_state.logs)), language=None)
     else:
         st.info("No log entries yet.")
-        
