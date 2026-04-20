@@ -89,13 +89,13 @@ with st.sidebar:
 
     st.divider()
     st.subheader("Training")
-    model_name      = st.selectbox("Model", ["transformer", "tfidf"])
-    test_size       = st.slider("Test size", 0.05, 0.40, 0.20, 0.05)
-    seed            = st.number_input("Random seed", value=40, step=1)
-    train_threshold = st.slider(
-        "Training threshold", 0.01, 0.99,
-        0.26 if model_name == "transformer" else 0.45, 0.01,
-    )
+    model_name = st.selectbox("Model", ["transformer", "tfidf"])
+    test_size  = st.slider("Test size", 0.05, 0.40, 0.20, 0.05)
+    seed       = st.number_input("Random seed", value=40, step=1)
+
+    st.divider()
+    st.subheader("Evaluation")
+    eval_threshold = st.slider("Eval threshold", 0.01, 0.99, 0.26, 0.01)
 
     st.divider()
     st.subheader("Prediction thresholds")
@@ -191,7 +191,7 @@ with tabs[1]:
 
                     base = logistic_model()
                     fn   = {"tfidf": train_tfidf, "transformer": train_transformer}[model_name]
-                    pipe = fn(base, X_tr, y_tr, threshold=train_threshold)
+                    pipe = fn(base, X_tr, y_tr)
                     save_model(pipe, save_path)
                     st.session_state.pipe = pipe
                     _log(f"Trained {model_name}, saved → {save_path}")
@@ -229,8 +229,6 @@ with tabs[2]:
     elif st.session_state.X_test is None:
         st.info("Run training first so the test split is available.")
     else:
-        eval_thresh = st.slider("Eval threshold", 0.01, 0.99, float(train_threshold), 0.01)
-
         if st.button("📊 Evaluate", type="primary", key="btn_eval"):
             with st.spinner("Evaluating…"):
                 try:
@@ -238,10 +236,10 @@ with tabs[2]:
                         st.session_state.pipe,
                         st.session_state.X_test,
                         st.session_state.y_test,
-                        eval_thresh,
+                        eval_threshold,
                     )
                     st.session_state.eval_results = results
-                    _log(f"Eval t={eval_thresh:.2f} acc={results['accuracy']:.3f} f1={results['f1']:.3f} roc={results['roc_auc']:.3f}")
+                    _log(f"Eval t={eval_threshold:.2f} acc={results['accuracy']:.3f} f1={results['f1']:.3f} roc={results['roc_auc']:.3f}")
                 except Exception as exc:
                     st.error(str(exc)); _log(f"ERROR eval: {exc}")
 
