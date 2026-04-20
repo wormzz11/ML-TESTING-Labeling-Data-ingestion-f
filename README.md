@@ -12,4 +12,4 @@ ms-marco
 
 ### TODO:
 
-Introduce a finer sieve, as a second stage filtering before enrichment ms-marco
+Tidy up and finish//documment the project
