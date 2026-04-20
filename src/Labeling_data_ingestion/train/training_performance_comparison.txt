@@ -1,6 +1,3 @@
-#train_TFIDF  -> finished
-#train_transformer -> finished
-#pytorch_model.py -> to be  created possibly
 
 #Logistic regression
 

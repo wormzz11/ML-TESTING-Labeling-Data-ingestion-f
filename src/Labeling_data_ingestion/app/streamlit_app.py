@@ -40,7 +40,7 @@ except Exception as exc:
     _DEFAULT_HIGH_NEG    = 0.30
 
 st.set_page_config(
-    page_title="Labeling Pipeline",
+    page_title="Labeling Tool",
     page_icon="🔬",
     layout="wide",
     initial_sidebar_state="expanded",
